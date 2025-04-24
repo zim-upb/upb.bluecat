@@ -1,0 +1,132 @@
+#!/usr/bin/python
+
+# Copyright: (c) 2025, Philipp Fromme <philipp.fromme@uni-paderborn.de>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
+import json
+
+import ipaddress
+from ansible_collections.local.bluecat.plugins.module_utils.bc_util import BluecatModule
+
+class Network(BluecatModule):
+    def __init__(self):
+        self.module_args = dict(
+            state=dict(type='str', default='present', choices=['present', 'absent']),
+            name=dict(required=True, type='str'),
+            range=dict(required=True, type='str'),
+            configuration=dict(required=True, type='str'),
+            defaultZonesInherited=dict(type='bool', default=True),
+            restrictedZonesInherited=dict(type='bool', default=True),
+            reverseZoneSigned=dict(type='bool', default=False),
+            dynamicUpdateEnabled=dict(type='bool', default=False),
+            gateway=dict(type='str', default=None)
+        )
+
+
+        super(Network, self).__init__(self.module_args,
+                                      supports_check_mode=True)
+
+    def exec_module(self, **kwargs):
+        network = self.get_network() or dict()
+        # TODO: check if range is actually ip_network
+        state = self.module.params.get('state')
+        network_id = network.get('id')
+        if state == 'present':
+            if network:
+                if self.compare_data(network):
+                    self.update_network(network_id)
+            else:
+                parent_id = self.get_block_id()
+                self.create_network(parent_id)
+        elif state =="absent":
+            self.delete_network(network_id)
+
+        result = None
+        changed = False
+        self.exit_json(changed=changed, result=str(result))
+
+    def get_network(self):
+        filter = 'configuration.name:eq("{}") and range:eq("{}")'.format(self.module.params.get('configuration'), self.module.params.get('range'))
+        networks = self.client.http_get('/networks',
+                                              params={'limit': 1,
+                                                      'filter': filter
+                                                     }
+                                              )
+        if networks['count'] == 0:
+            return None
+        else:
+            return networks['data'][0]
+
+    def get_block_id(self):
+        range = self.module.params.get('range')
+        network_address = range.split('/')[0]
+        filter = 'configuration.name:eq("{}") and range:ge("{}") and range:contains("{}")'.format(self.module.params.get('configuration'), range, network_address)
+        block = self.client.http_get('/blocks',
+                                     params={'limit': 100,
+                                             'filter': filter}
+                                     )
+        if block['count'] == 0:
+            return None
+        else:
+            return block['data'][-1]['id']
+
+    def create_network(self, parent_id):
+        changed = True
+        result = None
+        if not self.module.check_mode:
+            data = self.build_data()
+            result = self.client.http_post(f'/blocks/{parent_id}/networks',
+                                            data=data,
+                                            headers=self.headers)
+        self.exit_json(changed=changed, result=str(result))
+
+    def update_network(self, id):
+        changed = True
+        result = None
+        if not self.module.check_mode:
+            data = self.build_data()
+            result = self.client.http_put(f'/networks/{id}',
+                                          data=data,
+                                          headers=self.headers)
+        self.exit_json(changed=changed, result=str(result))
+
+    def delete_network(self, id):
+        changed = True
+        result = None
+        if not self.module.check_mode:
+            result = self.client.http_delete(f'/networks/{id}')
+        self.exit_json(changed=changed, result=str(result))
+
+    def build_data(self):
+        data = dict()
+        data['name'] = self.module.params.get('name')
+        data['range'] = self.module.params.get('range')
+        data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
+        data['restrictedZonesInherited'] = self.module.params.get('restrictedZonesInherited')
+        data['reverseZoneSigned'] = self.module.params.get('reverseZoneSigned')
+        data['dynamicUpdateEnabled'] = self.module.params.get('dynamicUpdateEnabled')
+        data['type'] = 'IPv6Network'
+        if ipaddress.ip_network(self.module.params.get('range')).version == 4:
+            data['type'] = 'IPv4Network'
+            if self.module.params.get('gateway') is None:
+                self.headers['x-bcn-no-gateway'] = "true"
+            else:
+                data['gateway'] = self.module.params.get('gateway')
+        data = json.dumps(data)
+        return data
+
+    def compare_data(self, network):
+        data = json.loads(self.build_data())
+        for key, value in data.items():
+            if key not in network:
+                continue
+            if key not in network or network[key] != value:
+                return True
+        return False
+
+def main():
+    Network()
+
+if __name__ == '__main__':
+    main()
