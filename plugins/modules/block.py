@@ -124,11 +124,13 @@ class Block(BluecatModule):
 
     def build_data(self):
         data = dict()
+        range = self.module.params.get('range')
         data['name'] = self.module.params.get('name')
-        data['range'] = self.module.params.get('range')
-        data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
-        data['restrictedZonesInherited'] = self.module.params.get('restrictedZonesInherited')
-        data['reverseZoneSigned'] = self.module.params.get('reverseZoneSigned')
+        data['range'] = range
+        if ipaddress.ip_network(range).version == 4:
+            data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
+            data['restrictedZonesInherited'] = self.module.params.get('restrictedZonesInherited')
+            data['reverseZoneSigned'] = self.module.params.get('reverseZoneSigned')
         data['type'] = 'IPv6Block'
         if ipaddress.ip_network(self.module.params.get('range')).version == 4:
             data['type'] = 'IPv4Block'
