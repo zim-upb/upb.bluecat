@@ -18,7 +18,8 @@ class Block(BluecatModule):
             configuration=dict(required=True, type='str'),
             defaultZonesInherited=dict(type='bool', default=True),
             restrictedZonesInherited=dict(type='bool', default=True),
-            reverseZoneSigned=dict(type='bool', default=False)
+            reverseZoneSigned=dict(type='bool', default=False),
+            userDefinedFields=dict(type='dict')
         )
 
 
@@ -130,6 +131,8 @@ class Block(BluecatModule):
             name = None
         data['name'] = name
         data['range'] = range
+        if self.module.params.get('userDefinedFields'):
+            data['userDefinedFields'] = self.module.params.get('userDefinedFields')
         if ipaddress.ip_network(range).version == 4:
             data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
             data['restrictedZonesInherited'] = self.module.params.get('restrictedZonesInherited')
