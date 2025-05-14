@@ -72,9 +72,11 @@ class Block(BluecatModule):
             return configurations['data'][0]['id']
 
     def find_parent_id(self):
-        filter = 'configuration.name:eq("{}") and range:contains("{}")'.format(self.module.params.get('configuration'), self.module.params.get('range'))
+        range = self.module.params.get('range')
+        network_address = range.split('/')[0]
+        filter = 'configuration.name:eq("{}") and range:contains("{}")'.format(self.module.params.get('configuration'), network_address)
         block = self.client.http_get('/blocks',
-                                     params={'limit': 1,
+                                     params={'limit': 100,
                                              'filter': filter}
                                      )
         if block['count'] == 0:
