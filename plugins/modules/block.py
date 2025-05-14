@@ -125,7 +125,10 @@ class Block(BluecatModule):
     def build_data(self):
         data = dict()
         range = self.module.params.get('range')
-        data['name'] = self.module.params.get('name')
+        name = self.module.params.get('name')
+        if name == '':
+            name = None
+        data['name'] = name
         data['range'] = range
         if ipaddress.ip_network(range).version == 4:
             data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
