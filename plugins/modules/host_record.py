@@ -138,6 +138,9 @@ class HostRecord(BluecatModule):
                     ip = address.get('address')
                     if ip not in self.module.params.get('addresses'):
                         return True
+                for ip in self.module.params.get('addresses'):
+                    if ip not in addresses:
+                        return True
             elif rr[key] != value:
                 return True
         return False
