@@ -17,6 +17,7 @@ class HostRecord(BluecatModule):
             configuration=dict(required=True, type='str'),
             view=dict(required=True, type='str'),
             zone=dict(required=True, type='str'),
+            reverseRecord=dict(type='bool', default=True),
             addresses=dict(type='list')
         )
 
@@ -100,6 +101,7 @@ class HostRecord(BluecatModule):
         data = dict()
         data['name'] = self.module.params.get('name')
         data['type'] = "HostRecord"
+        data['reverseRecord'] = self.module.params.get('reverseRecord')
         addresses = self.module.params.get('addresses')
         data_addresses = []
         for address in addresses:
