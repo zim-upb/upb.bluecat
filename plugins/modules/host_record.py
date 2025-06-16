@@ -43,8 +43,8 @@ class HostRecord(BluecatModule):
 
     def get_resource_record(self):
         absolute_name = '{}.{}'.format(self.module.params.get('name'), self.module.params.get('zone'))
-        filter = 'configuration.name:eq("{}") and view.name:eq("{}") and absoluteName:eq("{}")'.format(
-            self.module.params.get('configuration'), self.module.params.get('view'), absolute_name)
+        filter = 'configuration.name:eq("{}") and absoluteName:eq("{}")'.format(
+            self.module.params.get('configuration'), absolute_name)
         rr = self.client.http_get('/resourceRecords',
                                      params={'limit': 1,
                                              'filter': filter,
