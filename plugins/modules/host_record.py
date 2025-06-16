@@ -18,7 +18,8 @@ class HostRecord(BluecatModule):
             view=dict(required=True, type='str'),
             zone=dict(required=True, type='str'),
             reverseRecord=dict(type='bool', default=True),
-            addresses=dict(type='list')
+            addresses=dict(type='list'),
+            x_bcn_orphaned_address_state=dict(type='str', default="")
         )
 
         super(HostRecord, self).__init__(self.module_args,
@@ -91,8 +92,10 @@ class HostRecord(BluecatModule):
     def delete_host_record(self, id):
         changed = True
         result = None
+        self.headers['x-bcn-orphaned-address-state'] = self.module.params.get('x_bcn_orphaned_address_state')
         if not self.module.check_mode:
-            result = self.client.http_delete(f'/resourceRecords/{id}')
+            result = self.client.http_delete(f'/resourceRecords/{id}',
+                                             headers=self.headers)
         self.exit_json(changed=changed, result=str(result))
 
     def build_data(self):
