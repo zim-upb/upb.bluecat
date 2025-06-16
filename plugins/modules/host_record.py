@@ -25,7 +25,8 @@ class HostRecord(BluecatModule):
                                          supports_check_mode=True)
 
     def exec_module(self, **kwargs):
-        rr = self.get_resource_record() or dict()
+        zone_id = self.get_zone_id()
+        rr = self.get_resource_record(zone_id) or dict()
         state = self.module.params.get('state')
         rr_id = rr.get('id')
         if state == 'present':
@@ -33,7 +34,7 @@ class HostRecord(BluecatModule):
                 if self.compare_data(rr):
                     self.update_host_record(rr_id)
             else:
-                self.create_host_record()
+                self.create_host_record(zone_id)
         elif state =="absent":
             self.delete_host_record()
 
@@ -41,11 +42,9 @@ class HostRecord(BluecatModule):
         changed = False
         self.exit_json(changed=changed, result=str(result))
 
-    def get_resource_record(self):
-        absolute_name = '{}.{}'.format(self.module.params.get('name'), self.module.params.get('zone'))
-        filter = 'configuration.name:eq("{}") and absoluteName:eq("{}")'.format(
-            self.module.params.get('configuration'), absolute_name)
-        rr = self.client.http_get('/resourceRecords',
+    def get_resource_record(self, zone_id):
+        filter = 'name:eq("{}")'.format(self.module.params.get('name'))
+        rr = self.client.http_get(f'/zones/{zone_id}/resourceRecords',
                                      params={'limit': 1,
                                              'filter': filter,
                                              'fields': 'embed(addresses)'
@@ -69,10 +68,9 @@ class HostRecord(BluecatModule):
         else:
             return zones['data'][0]['id']
 
-    def create_host_record(self):
+    def create_host_record(self, zone_id):
         changed = True
         result = None
-        zone_id = self.get_zone_id()
         if not self.module.check_mode:
             data = self.build_data()
             result = self.client.http_post(f'/zones/{zone_id}/resourceRecords',
