@@ -36,7 +36,7 @@ class HostRecord(BluecatModule):
             else:
                 self.create_host_record(zone_id)
         elif state =="absent":
-            self.delete_host_record()
+            self.delete_host_record(rr_id)
 
         result = None
         changed = False
@@ -88,7 +88,7 @@ class HostRecord(BluecatModule):
                                           headers=self.headers)
         self.exit_json(changed=changed, result=str(result))
 
-    def delete_host_record(self):
+    def delete_host_record(self, id):
         changed = True
         result = None
         if not self.module.check_mode:
