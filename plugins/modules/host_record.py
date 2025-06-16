@@ -21,9 +21,7 @@ class HostRecord(BluecatModule):
         )
 
         super(HostRecord, self).__init__(self.module_args,
-                                         supports_check_mode=True,
-                                         required_if=self.required_if,
-                                         mutually_exclusive=self.mutually_exclusive)
+                                         supports_check_mode=True)
 
     def exec_module(self, **kwargs):
         rr = self.get_resource_record() or dict()
