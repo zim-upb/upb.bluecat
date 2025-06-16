@@ -133,14 +133,11 @@ class HostRecord(BluecatModule):
         data = json.loads(self.build_data())
         for key, value in data.items():
             if key == 'addresses':
-                addresses = rr.get('_embedded').get('addresses')
-                for address in addresses:
-                    ip = address.get('address')
-                    if ip not in self.module.params.get('addresses'):
-                        return True
-                for ip in self.module.params.get('addresses'):
-                    if ip not in addresses:
-                        return True
+                ipam_addresses = rr.get('_embedded').get('addresses')
+                ipam_addresses = [ipaddress.ip_address(x.get('address')) for x in ipam_addresses]
+                task_addresses = [ipaddress.ip_address(x) for x in self.module.params.get('addresses')]
+                if set(ipam_addresses) != set(task_addresses):
+                    return True
             elif rr[key] != value:
                 return True
         return False
