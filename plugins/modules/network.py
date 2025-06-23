@@ -20,7 +20,8 @@ class Network(BluecatModule):
             restrictedZonesInherited=dict(type='bool', default=True),
             reverseZoneSigned=dict(type='bool', default=False),
             dynamicUpdateEnabled=dict(type='bool', default=False),
-            gateway=dict(type='str', default=None)
+            gateway=dict(type='str', default=None),
+            userDefinedFields=dict(type='dict')
         )
 
 
@@ -113,6 +114,8 @@ class Network(BluecatModule):
                 self.headers['x-bcn-no-gateway'] = "true"
             else:
                 data['gateway'] = self.module.params.get('gateway')
+        if self.module.params.get('userDefinedFields'):
+            data['userDefinedFields'] = self.module.params.get('userDefinedFields')
         data = json.dumps(data)
         return data
 
@@ -121,7 +124,10 @@ class Network(BluecatModule):
         for key, value in data.items():
             if key not in network:
                 continue
-            if key not in network or network[key] != value:
+            if type(value) == dict:
+                if all(value[udf] == network[key][udf] for udf in value.keys()) == False:
+                    return True
+            elif key not in network or network[key] != value:
                 return True
         return False
 
