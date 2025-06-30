@@ -119,17 +119,8 @@ class Network(BluecatModule):
             self.module.params['name'] = None
         data['name'] = self.module.params.get('name')
         data['range'] = self.module.params.get('range')
-        data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
-        if self.module.params.get('defaultZones'):
-            data['defaultZones'] = []
-            for zone in self.module.params.get('defaultZones'):
-                zone_id = self.get_zone_id(zone)
-                data['defaultZones'].append({'type': 'Zone',
-                                             'id': zone_id,
-                                             'absoluteName': zone})
         data['restrictedZonesInherited'] = self.module.params.get('restrictedZonesInherited')
         data['reverseZoneSigned'] = self.module.params.get('reverseZoneSigned')
-        data['dynamicUpdateEnabled'] = self.module.params.get('dynamicUpdateEnabled')
         data['type'] = 'IPv6Network'
         if ipaddress.ip_network(self.module.params.get('range')).version == 4:
             data['type'] = 'IPv4Network'
@@ -137,6 +128,15 @@ class Network(BluecatModule):
                 self.headers['x-bcn-no-gateway'] = "true"
             else:
                 data['gateway'] = self.module.params.get('gateway')
+            data['dynamicUpdateEnabled'] = self.module.params.get('dynamicUpdateEnabled')
+            data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
+            if self.module.params.get('defaultZones'):
+                data['defaultZones'] = []
+                for zone in self.module.params.get('defaultZones'):
+                    zone_id = self.get_zone_id(zone)
+                    data['defaultZones'].append({'type': 'Zone',
+                                                 'id': zone_id,
+                                                 'absoluteName': zone})
         if self.module.params.get('userDefinedFields'):
             data['userDefinedFields'] = self.module.params.get('userDefinedFields')
         data = json.dumps(data)
