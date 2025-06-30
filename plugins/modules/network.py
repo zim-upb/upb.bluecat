@@ -34,6 +34,8 @@ class Network(BluecatModule):
         # TODO: check if range is actually ip_network
         state = self.module.params.get('state')
         network_id = network.get('id')
+        # normalize for IPv6 ranges
+        self.module.params['range'] = self.module.params.get('range').lower()
         if state == 'present':
             if network:
                 if self.compare_data(network):
