@@ -17,6 +17,7 @@ class Network(BluecatModule):
             range=dict(required=True, type='str'),
             configuration=dict(required=True, type='str'),
             defaultZonesInherited=dict(type='bool', default=True),
+            defaultZones=dict(type='list', default=[]),
             restrictedZonesInherited=dict(type='bool', default=True),
             reverseZoneSigned=dict(type='bool', default=False),
             dynamicUpdateEnabled=dict(type='bool', default=False),
@@ -51,7 +52,8 @@ class Network(BluecatModule):
         filter = 'configuration.name:eq("{}") and range:eq("{}")'.format(self.module.params.get('configuration'), self.module.params.get('range'))
         networks = self.client.http_get('/networks',
                                               params={'limit': 1,
-                                                      'filter': filter
+                                                      'filter': filter,
+                                                      'fields': 'embed(defaultZones)'
                                                      }
                                               )
         if networks['count'] == 0:
@@ -71,6 +73,18 @@ class Network(BluecatModule):
             return None
         else:
             return block['data'][-1]['id']
+
+    def get_zone_id(self, absolute_name):
+        filter = 'configuration.name:eq("{}") and absoluteName:eq("{}")'.format(self.module.params.get('configuration'), absolute_name)
+        networks = self.client.http_get('/zones',
+                                        params={'limit': 1,
+                                                'filter': filter
+                                                }
+                                        )
+        if networks['count'] == 0:
+            return None
+        else:
+            return networks['data'][0]['id']
 
     def create_network(self, parent_id):
         changed = True
@@ -104,6 +118,13 @@ class Network(BluecatModule):
         data['name'] = self.module.params.get('name')
         data['range'] = self.module.params.get('range')
         data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
+        if self.module.params.get('defaultZones'):
+            data['defaultZones'] = []
+            for zone in self.module.params.get('defaultZones'):
+                zone_id = self.get_zone_id(zone)
+                data['defaultZones'].append({'type': 'Zone',
+                                             'id': zone_id,
+                                             'absoluteName': zone})
         data['restrictedZonesInherited'] = self.module.params.get('restrictedZonesInherited')
         data['reverseZoneSigned'] = self.module.params.get('reverseZoneSigned')
         data['dynamicUpdateEnabled'] = self.module.params.get('dynamicUpdateEnabled')
@@ -122,9 +143,14 @@ class Network(BluecatModule):
     def compare_data(self, network):
         data = json.loads(self.build_data())
         for key, value in data.items():
-            if key not in network:
+            if key not in network and key not in network['_embedded']:
                 continue
-            if type(value) == dict:
+            if key == 'defaultZones':
+                bam_defaultZone_ids = [x.get('id') for x in network['_embedded']['defaultZones']]
+                data_defaultZone_ids = [x.get('id') for x in value]
+                if data_defaultZone_ids != bam_defaultZone_ids:
+                    return True
+            elif type(value) == dict:
                 if all(value[udf] == network[key][udf] for udf in value.keys()) == False:
                     return True
             elif key not in network or network[key] != value:
