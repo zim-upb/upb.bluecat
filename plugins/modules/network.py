@@ -115,6 +115,8 @@ class Network(BluecatModule):
 
     def build_data(self):
         data = dict()
+        if self.module.params.get('name') == '':
+            self.module.params['name'] = None
         data['name'] = self.module.params.get('name')
         data['range'] = self.module.params.get('range')
         data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
@@ -131,7 +133,7 @@ class Network(BluecatModule):
         data['type'] = 'IPv6Network'
         if ipaddress.ip_network(self.module.params.get('range')).version == 4:
             data['type'] = 'IPv4Network'
-            if self.module.params.get('gateway') is None:
+            if self.module.params.get('gateway') is None or self.module.params.get('gateway') == '':
                 self.headers['x-bcn-no-gateway'] = "true"
             else:
                 data['gateway'] = self.module.params.get('gateway')
