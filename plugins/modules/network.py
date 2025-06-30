@@ -128,6 +128,7 @@ class Network(BluecatModule):
             data['type'] = 'IPv4Network'
             if self.module.params.get('gateway') is None or self.module.params.get('gateway') == '':
                 self.headers['x-bcn-no-gateway'] = "true"
+                data['gateway'] = None
             else:
                 data['gateway'] = self.module.params.get('gateway')
             data['dynamicUpdateEnabled'] = self.module.params.get('dynamicUpdateEnabled')
