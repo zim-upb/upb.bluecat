@@ -16,7 +16,7 @@ class ResourceRecordFacts(BluecatModule):
 
     def exec_module(self, **kwargs):
         results = dict(ansible_facts=dict(resource_records=[]))
-        response = self.client.http_get('/resource_records',
+        response = self.client.http_get('/resourceRecords',
                                         params={'limit': self.module.params.get('limit'),
                                                 'filter': self.module.params.get('filter'),
                                                 'fields': self.module.params.get('fields')
