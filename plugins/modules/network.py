@@ -36,6 +36,9 @@ class Network(BluecatModule):
         network_id = network.get('id')
         # normalize for IPv6 ranges
         self.module.params['range'] = self.module.params.get('range').lower()
+        ip_network = ipaddress.ip_network(self.module.params.get('range'))
+        if ip_network.version == 6 and ip_network.prefixlen < 64:
+            self.fail_json(msg=f"{self.module.params.get('range')} prefix length must be between /64 and /128')")
         if state == 'present':
             if network:
                 if self.compare_data(network):
