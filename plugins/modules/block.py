@@ -17,6 +17,7 @@ class Block(BluecatModule):
             range=dict(required=True, type='str'),
             configuration=dict(required=True, type='str'),
             defaultZonesInherited=dict(type='bool', default=True),
+            defaultZones=dict(type='list', default=[]),
             restrictedZonesInherited=dict(type='bool', default=True),
             reverseZoneSigned=dict(type='bool', default=False),
             userDefinedFields=dict(type='dict')
@@ -52,7 +53,8 @@ class Block(BluecatModule):
         filter = 'configuration.name:eq("{}") and range:eq("{}")'.format(self.module.params.get('configuration'), self.module.params.get('range'))
         blocks = self.client.http_get('/blocks',
                                               params={'limit': 1,
-                                                      'filter': filter
+                                                      'filter': filter,
+                                                      'fields': 'embed(defaultZones)'
                                                      }
                                               )
         if blocks['count'] == 0:
@@ -84,6 +86,18 @@ class Block(BluecatModule):
             return None
         else:
             return block['data'][0]['id']
+
+    def get_zone_id(self, absolute_name):
+        filter = 'configuration.name:eq("{}") and absoluteName:eq("{}")'.format(self.module.params.get('configuration'), absolute_name)
+        networks = self.client.http_get('/zones',
+                                        params={'limit': 1,
+                                                'filter': filter
+                                                }
+                                        )
+        if networks['count'] == 0:
+            return None
+        else:
+            return networks['data'][0]['id']
 
     def create_top_block(self):
         changed = True
@@ -135,6 +149,13 @@ class Block(BluecatModule):
             data['userDefinedFields'] = self.module.params.get('userDefinedFields')
         if ipaddress.ip_network(range).version == 4:
             data['defaultZonesInherited'] = self.module.params.get('defaultZonesInherited')
+            if self.module.params.get('defaultZones'):
+                data['defaultZones'] = []
+                for zone in self.module.params.get('defaultZones'):
+                    zone_id = self.get_zone_id(zone)
+                    data['defaultZones'].append({'type': 'Zone',
+                                                 'id': zone_id,
+                                                 'absoluteName': zone})
             data['restrictedZonesInherited'] = self.module.params.get('restrictedZonesInherited')
             data['reverseZoneSigned'] = self.module.params.get('reverseZoneSigned')
         data['type'] = 'IPv6Block'
@@ -146,7 +167,12 @@ class Block(BluecatModule):
     def compare_data(self, block):
         data = json.loads(self.build_data())
         for key, value in data.items():
-            if block[key] != value:
+            if key == 'defaultZones':
+                bam_defaultZone_ids = [x.get('id') for x in block['_embedded']['defaultZones']]
+                data_defaultZone_ids = [x.get('id') for x in value]
+                if data_defaultZone_ids != bam_defaultZone_ids:
+                    return True
+            elif block[key] != value:
                 return True
         return False
 
