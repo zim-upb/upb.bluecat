@@ -158,10 +158,11 @@ class Network(BluecatModule):
                 data_defaultZone_ids = [x.get('id') for x in value]
                 if data_defaultZone_ids != bam_defaultZone_ids:
                     return True
-            elif type(value) == dict:
-                if all(value[udf] == network[key][udf] for udf in value.keys()) == False:
-                    return True
-            elif key not in network or network[key] != value:
+            elif key == 'userDefinedFields':
+                for udf_key, udf_value in value.items():
+                    if udf_value != network[key][udf_key]:
+                        return True
+            elif network[key] != value:
                 return True
         return False
 
