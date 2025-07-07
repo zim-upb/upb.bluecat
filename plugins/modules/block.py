@@ -172,6 +172,10 @@ class Block(BluecatModule):
                 data_defaultZone_ids = [x.get('id') for x in value]
                 if data_defaultZone_ids != bam_defaultZone_ids:
                     return True
+            elif key == 'userDefinedFields':
+                for udf_key, udf_value in value.items():
+                    if udf_value != block[key][udf_key]:
+                        return True
             elif block[key] != value:
                 return True
         return False
