@@ -101,7 +101,7 @@ class AliasRecord(BluecatModule):
                                              }
                                      )
         if rr['count'] == 0:
-            self.fail_json(msg="Did not find {name}")
+            self.fail_json(msg=f"Did not find {name}")
             return None
 
         data = dict()
