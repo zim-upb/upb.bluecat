@@ -13,7 +13,7 @@ class Block(BluecatModule):
     def __init__(self):
         self.module_args = dict(
             state=dict(type='str', default='present', choices=['present', 'absent']),
-            name=dict(required=True, type='str'),
+            name=dict(type='str', default=''),
             range=dict(required=True, type='str'),
             configuration=dict(required=True, type='str'),
             defaultZonesInherited=dict(type='bool', default=True),
