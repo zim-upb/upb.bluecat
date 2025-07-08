@@ -44,7 +44,7 @@ class HostRecord(BluecatModule):
         self.exit_json(changed=changed, result=str(result))
 
     def get_resource_record(self, zone_id):
-        filter = 'name:eq("{}")'.format(self.module.params.get('name'))
+        filter = 'name:eq("{}") and type:eq("HostRecord")'.format(self.module.params.get('name'))
         rr = self.client.http_get(f'/zones/{zone_id}/resourceRecords',
                                      params={'limit': 1,
                                              'filter': filter,
