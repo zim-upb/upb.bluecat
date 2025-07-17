@@ -17,6 +17,8 @@ class Zone(BluecatModule):
             view=dict(required=True, type='str'),
             zone=dict(type='str'),
             deploymentEnabled=dict(type='bool', default=True),
+            dynamicUpdateEnabled=dict(type='bool', default=False),
+            signed=dict(type='bool', default=False),
             move_dotted_resource_records=dict(type='bool', default=False)
         )
 
@@ -125,6 +127,8 @@ class Zone(BluecatModule):
         data = dict()
         data['name'] = self.module.params.get('name')
         data['deploymentEnabled'] = self.module.params.get('deploymentEnabled')
+        data['dynamicUpdateEnabled'] = self.module.params.get('dynamicUpdateEnabled')
+        data['signed'] = self.module.params.get('signed')
         data['type'] = 'Zone'
         data = json.dumps(data)
         return data
