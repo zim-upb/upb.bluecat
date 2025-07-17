@@ -13,7 +13,7 @@ class DeploymentRole(BluecatModule):
         self.module_args = dict(
             state=dict(type='str', default='present', choices=['present', 'absent']),
             type=dict(type='str', required=True, choices=['DNSDeploymentRole', 'DHCPDeploymentRole', 'TFTPDeploymentRole']),
-            roleType=dict(type='str', required=True, choices=['PRIMARY', 'SECONDARY', 'TFTP']),
+            roleType=dict(type='str', required=True, choices=['PRIMARY', 'SECONDARY', 'TFTP', 'NONE']),
             collection=dict(type='str', required=True, choices=['blocks', 'networks', 'zones']),
             resource=dict(type='str', required=True),
             interface=dict(type='str', required=True),
