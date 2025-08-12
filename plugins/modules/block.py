@@ -85,7 +85,7 @@ class Block(BluecatModule):
         if block['count'] == 0:
             return None
         else:
-            return block['data'][0]['id']
+            return block['data'][-1]['id']
 
     def get_zone_id(self, absolute_name):
         filter = 'configuration.name:eq("{}") and absoluteName:eq("{}")'.format(self.module.params.get('configuration'), absolute_name)
