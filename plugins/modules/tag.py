@@ -76,15 +76,6 @@ class Tag(BluecatModule):
         data = json.dumps(data)
         return data
 
-    def compare_data(self, tag):
-        data = json.loads(self.build_data())
-        for key, value in data.items():
-            if key not in network and key not in network['_embedded']:
-                continue
-            elif network[key] != value:
-                return True
-        return False
-
 def main():
     Tag()
 
