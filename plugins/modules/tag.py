@@ -6,7 +6,6 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 import json
 
-import ipaddress
 from ansible_collections.local.bluecat.plugins.module_utils.bc_util import BluecatModule
 
 class Tag(BluecatModule):
