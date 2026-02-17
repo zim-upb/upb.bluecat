@@ -52,3 +52,28 @@ class BluecatModule():
     def exit_json(self, **kwargs):
         self.logout()
         self.module.exit_json(**kwargs)
+
+    def get_tag(self, name):
+        filter = 'name:eq("{}")'.format(name)
+        rr = self.client.http_get(f'/tags',
+                                  params={'limit': 1,
+                                          'filter': filter
+                                          }
+                                  )
+        if rr['count'] == 0:
+            return None
+        else:
+            return rr['data'][0]
+
+    def get_tag_group(self, name):
+        filter = 'name:eq("{}")'.format(name)
+        rr = self.client.http_get(f'/tagGroups',
+                                  params={'limit': 1,
+                                          'filter': filter
+                                          }
+                                  )
+        if rr['count'] == 0:
+            return None
+        else:
+            return rr['data'][0]
+
