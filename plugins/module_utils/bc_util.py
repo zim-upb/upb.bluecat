@@ -53,6 +53,30 @@ class BluecatModule():
         self.logout()
         self.module.exit_json(**kwargs)
 
+    def get_block(self, configuration, range):
+        filter = 'configuration.name:eq("{}") and range:eq("{}")'.format(configuration, range)
+        blocks = self.client.http_get('/blocks',
+                                       params={'limit': 1,
+                                               'filter': filter
+                                              }
+                                       )
+        if blocks['count'] == 0:
+            return None
+        else:
+            return blocks['data'][0]
+
+    def get_network(self, configuration, range):
+        filter = 'configuration.name:eq("{}") and range:eq("{}")'.format(configuration, range)
+        networks = self.client.http_get('/networks',
+                                        params={'limit': 1,
+                                                'filter': filter
+                                               }
+                                        )
+        if networks['count'] == 0:
+            return None
+        else:
+            return networks['data'][0]
+
     def get_tag(self, name):
         filter = 'name:eq("{}")'.format(name)
         rr = self.client.http_get(f'/tags',
