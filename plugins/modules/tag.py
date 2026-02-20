@@ -35,6 +35,8 @@ class Tag(BluecatModule):
         if self.module.params.get('state') == 'present':
             if not tag:
                 if self.module.params.get('tag'):
+                    # this could cause issues, as there could be multiple tags
+                    # in different tags/tag groups with the same name
                     parent = self.get_tag(self.module.params.get('tag'))
                 elif self.module.params.get('tagGroup'):
                     parent = self.get_tag_group(self.module.params.get('tagGroup'))
