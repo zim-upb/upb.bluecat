@@ -8,7 +8,9 @@ from ansible_collections.local.bluecat.plugins.module_utils.bc_util import Bluec
 
 class TagFacts(BluecatModule):
     def __init__(self):
-        self.module_args = dict()
+        self.module_args = dict(
+            tagGroup=dict(type='str')
+        )
 
         super(TagFacts, self).__init__(self.module_args,
                                             supports_check_mode=True,
@@ -16,12 +18,25 @@ class TagFacts(BluecatModule):
 
     def exec_module(self, **kwargs):
         results = dict(ansible_facts=dict(tags=[]))
-        response = self.client.http_get('/tags',
-                                        params={'limit': self.module.params.get('limit'),
-                                                'filter': self.module.params.get('filter'),
-                                                'fields': self.module.params.get('fields')
-                                                }
-                                        )
+        tag_group = self.module.params.get('tagGroup')
+        if tag_group:
+            parent = self.get_tag_group(tag_group)
+            if parent == None:
+                self.fail_json("Could not find tagGroup!")
+            parent_id = parent.get('id')
+            response = self.client.http_get(f'/tagGroups/{parent_id}/tags',
+                                            params={'limit': self.module.params.get('limit'),
+                                                    'filter': self.module.params.get('filter'),
+                                                    'fields': self.module.params.get('fields')
+                                                    }
+                                            )
+        else:
+            response = self.client.http_get('/tags',
+                                            params={'limit': self.module.params.get('limit'),
+                                                    'filter': self.module.params.get('filter'),
+                                                    'fields': self.module.params.get('fields')
+                                                    }
+                                            )
         if response['count'] > 0:
             tags = response['data']
             results['ansible_facts']['tags'] = tags
