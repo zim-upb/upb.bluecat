@@ -72,7 +72,8 @@ class Network(BluecatModule):
         filter = 'configuration.name:eq("{}") and range:ge("{}") and range:contains("{}")'.format(self.module.params.get('configuration'), range, network_address)
         block = self.client.http_get('/blocks',
                                      params={'limit': 100,
-                                             'filter': filter}
+                                             'filter': filter,
+                                             'orderBy': "range"}
                                      )
         if block['count'] == 0:
             return None
