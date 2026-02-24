@@ -16,54 +16,39 @@ class View(BluecatModule):
             configuration=dict(required=True, type='str')
         )
 
-
         super(View, self).__init__(self.module_args,
                                    supports_check_mode=True)
 
     def exec_module(self, **kwargs):
-        view = self.get_view() or dict()
-        # TODO: check if range is actually ip_network
+        configuration_name = self.module.params.get('configuration')
+        configuration = self.get_configuration_by_name(configuration_name)
+        if configuration is None:
+            self.fail_json('No configuration with name {} found!'.format(self.module.params.get('configuration')))
+        configuration_id = configuration.get('id')
+
+        name = self.module.params.get('name')
+        view = self.get_view_by_name(configuration_name, name)
+        view_id = None
+        if view:
+            view_id = view.get('id')
+
         state = self.module.params.get('state')
-        view_id = view.get('id')
         if state == 'present':
-            if view:
-                if self.compare_data(view):
+            data = self.build_data()
+            if view_id:
+                if self.compare_data(view, data):
                     self.update_view(view_id)
             else:
-                config_id = self.get_configuration_id()
-                self.create_view(config_id)
-        elif state =="absent":
-            self.delete_network(view_id)
+                self.create_view(configuration_id, data)
+        elif state == 'absent':
+            self.delete_view(view_id)
 
         result = None
         changed = False
         self.exit_json(changed=changed, result=str(result))
 
-    def get_configuration_id(self):
-        filter = 'name:eq("{}")'.format(self.module.params.get('configuration'))
-        configurations = self.client.http_get('/configurations',
-                                              params={'limit': 1,
-                                                      'filter': filter
-                                                      }
-                                              )
-        if configurations['count'] == 0:
-            self.fail_json('No configuration with name {} found!'.format(self.module.params.get('configuration')))
-        else:
-            return configurations['data'][0]['id']
 
-    def get_view(self):
-        filter = 'configuration.name:eq("{}") and name:eq("{}")'.format(self.module.params.get('configuration'), self.module.params.get('name'))
-        networks = self.client.http_get('/views',
-                                              params={'limit': 1,
-                                                      'filter': filter
-                                                     }
-                                              )
-        if networks['count'] == 0:
-            return None
-        else:
-            return networks['data'][0]
-
-    def create_view(self, configuration_id):
+    def create_view(self, configuration_id, data):
         changed = True
         result = None
         if not self.module.check_mode:
@@ -71,23 +56,26 @@ class View(BluecatModule):
             result = self.client.http_post(f'/configurations/{configuration_id}/views',
                                             data=data,
                                             headers=self.headers)
+
         self.exit_json(changed=changed, result=str(result))
 
-    def update_view(self, id):
+    def update_view(self, view_id):
         changed = True
         result = None
         if not self.module.check_mode:
             data = self.build_data()
-            result = self.client.http_put(f'/views/{id}',
+            result = self.client.http_put(f'/views/{view_id}',
                                           data=data,
                                           headers=self.headers)
+
         self.exit_json(changed=changed, result=str(result))
 
-    def delete_view(self, id):
+    def delete_view(self, view_id):
         changed = True
         result = None
         if not self.module.check_mode:
-            result = self.client.http_delete(f'/views/{id}')
+            result = self.client.http_delete(f'/views/{view_id}')
+
         self.exit_json(changed=changed, result=str(result))
 
     def build_data(self):
@@ -96,10 +84,10 @@ class View(BluecatModule):
         data = json.dumps(data)
         return data
 
-    def compare_data(self, network):
-        data = json.loads(self.build_data())
+    def compare_data(self, view, data):
+        data = json.loads(data)
         for key, value in data.items():
-            if network[key] != value:
+            if view[key] != value:
                 return True
         return False
 

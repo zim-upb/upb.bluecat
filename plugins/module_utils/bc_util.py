@@ -107,6 +107,19 @@ class BluecatModule():
         else:
             return blocks['data'][0]
 
+    def get_configuration_by_name(self, name):
+        filter = f'name:eq("{name}")'
+        configurations = self.client.http_get('/configurations',
+                                              params={'limit': 1,
+                                                      'filter': filter
+                                                      }
+                                              )
+        if configurations['count'] == 0:
+            return None
+        else:
+            return configurations['data'][0]
+
+
     def get_network_by_range(self, configuration, range):
         filter = 'configuration.name:eq("{}") and range:eq("{}")'.format(configuration, range)
         networks = self.client.http_get('/networks',
@@ -206,3 +219,15 @@ class BluecatModule():
         else:
             return users['data'][0]
 
+    def get_view_by_name(self, configuration, name):
+        filter = (f'configuration.name:eq("{configuration}") and '
+                  f'name:eq("{name}")')
+        views = self.client.http_get('/views',
+                                      params={'limit': 1,
+                                              'filter': filter
+                                             }
+                                      )
+        if views['count'] == 0:
+            return None
+        else:
+            return views['data'][0]
