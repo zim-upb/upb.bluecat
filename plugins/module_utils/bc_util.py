@@ -82,6 +82,19 @@ class BluecatModule():
         else:
             return access_rights['data'][0]
 
+    def get_authenticator_by_name(self, name):
+        filter = 'name:eq("{}")'.format(name)
+        authenticators = self.client.http_get('/authenticators',
+                                              params={'limit': 1,
+                                                      'filter': filter
+                                                      }
+                                              )
+
+        if authenticators['count'] == 0:
+            return None
+        else:
+            return authenticators['data'][0]
+
     def get_block_by_range(self, configuration, range):
         filter = 'configuration.name:eq("{}") and range:eq("{}")'.format(configuration, range)
         blocks = self.client.http_get('/blocks',
