@@ -92,7 +92,7 @@ class AccessRight(BluecatModule):
         if state == 'present':
             data = self.build_data(userScope_id, resource_id)
             if access_right_id:
-                if not self.compare_data(access_right, data):
+                if self.compare_data(access_right, data):
                     self.update_access_right(access_right_id, data)
             else:
                 self.create_access_right(data)
@@ -167,8 +167,8 @@ class AccessRight(BluecatModule):
             if key == 'userScope':
                 continue
             if value != access_right[key]:
-                return False
-        return True
+                return True
+        return False
 
 def main():
     AccessRight()
