@@ -16,7 +16,7 @@ class AccessRight(BluecatModule):
             userScope_name=dict(type='str', required=True),
             userScope_type=dict(type='str', choices=['User', 'UserGroup'], required=True),
             resource=dict(type='str'),
-            resource_type=dict(type='str', choices=['networks', 'blocks', 'zones']),
+            resource_type=dict(type='str', choices=['networks', 'blocks', 'zones', 'views', 'configurations']),
             configuration=dict(type='str'),
             defaultAccessLevel=dict(type='str', choices=['VIEW', 'CHANGE', 'ADD', 'FULL'], required=True),
             admin_event_right=dict(type='str', choices=['VIEW', 'HIDE', 'FULL'], default='HIDE'),
@@ -29,11 +29,15 @@ class AccessRight(BluecatModule):
             accessOverrides=dict(type='list', default=[])
             )
 
-        self.required_together = [
-            ('resource', 'resource_type', 'configuration')
+        self.required_if = [
+            ('resource_type', 'blocks', ['configuration']),
+            ('resource_type', 'networks', ['configuration']),
+            ('resource_type', 'zones', ['configuration']),
+            ('resource_type', 'views', ['configuration']),
         ]
 
         super(AccessRight, self).__init__(self.module_args,
+                                          required_if=self.required_if
                                           supports_check_mode=True)
 
     def exec_module(self, **kwargs):
@@ -63,6 +67,17 @@ class AccessRight(BluecatModule):
                     self.fail_json(f'Could not find zone with FQDN {resource}'
                                    f'in configuration {configuration}')
                 resource_id = zone.get('id')
+            elif resource_type == 'views':
+                view = self.get_view_by_name(configuration, resource)
+                if view is None:
+                    self.fail_json(f'Could not find view with name {resource}'
+                                   f'in configuration {configuration}')
+                resource_id = view.get('id')
+        if resource_type == 'configurations':
+            configuration = self.get_configuration_by_name(resource)
+            if configuration is None:
+                self.fail_json(f'Could not find configuration with name {resource}')
+            resource_id = configuration.get('id')
 
         # find ID of user/group we want to give this access right
         userScope_name = self.module.params.get('userScope_name')
