@@ -43,19 +43,18 @@ class CollectionTag(BluecatModule):
         if parent == None:
             self.fail_json(msg='Could not find parent of tag!')
         parent_id = parent.get('id')
-        self.get_tag
 
         collection = self.module.params.get('collection')
         collection_id = None
         if collection == 'networks':
-            network = self.get_network(self.module.params.get('configuration'),
-                                       self.module.params.get('resource'))
+            network = self.get_network_by_range(self.module.params.get('configuration'),
+                                                self.module.params.get('resource'))
             if network == None:
                 self.fail_json(msg='Could not find network resource!')
             collection_id = network.get('id')
         elif collection == 'blocks':
-            block = self.get_block(self.module.params.get('configuration'),
-                                   self.module.params.get('resource'))
+            block = self.get_block_by_range(self.module.params.get('configuration'),
+                                            self.module.params.get('resource'))
             if block == None:
                 self.fail_json(msg='Could not find block resource!')
             collection_id = block.get('id')
