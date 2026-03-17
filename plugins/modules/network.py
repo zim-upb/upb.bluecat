@@ -161,6 +161,8 @@ class Network(BluecatModule):
                     return True
             elif key == 'userDefinedFields':
                 for udf_key, udf_value in value.items():
+                    if udf_value == '':
+                        udf_value = None
                     if udf_value != network[key][udf_key]:
                         return True
             elif network[key] != value:
