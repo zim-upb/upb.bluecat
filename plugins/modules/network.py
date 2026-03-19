@@ -69,7 +69,7 @@ class Network(BluecatModule):
     def get_block_id(self):
         range = self.module.params.get('range')
         network_address = range.split('/')[0]
-        filter = 'configuration.name:eq("{}") and range:ge("{}") and range:contains("{}")'.format(self.module.params.get('configuration'), range, network_address)
+        filter = 'configuration.name:eq("{}") and range:contains("{}")'.format(self.module.params.get('configuration'), network_address)
         block = self.client.http_get('/blocks',
                                      params={'limit': 100,
                                              'filter': filter,
@@ -77,8 +77,14 @@ class Network(BluecatModule):
                                      )
         if block['count'] == 0:
             return None
-        else:
-            return block['data'][-1]['id']
+        block_id = block['data'][0].get('id')
+        block_range = ipaddress.ip_network(block['data'][0].get('range'))
+        for data in block['data'][1:]:
+            current_range = ipaddress.ip_network(data.get('range'))
+            if current_range.subnet_of(block_range):
+                block_range = current_range
+                block_id = data.get('id')
+        return block_id
 
     def get_zone_id(self, absolute_name):
         filter = 'configuration.name:eq("{}") and absoluteName:eq("{}")'.format(self.module.params.get('configuration'), absolute_name)
