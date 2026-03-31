@@ -27,7 +27,6 @@ class Configuration(BluecatModule):
             dnsOptionInheritanceEnabled=dict(type='bool', default=True),
             checkSrvCnameValidation=dict(type='str', default="WARN"),
             keyAutoRegenerationEnabled=dict(type='bool', default=False),
-            dataCheckerEnabled=dict(type='bool', default=False),
             serverMonitoringEnabled=dict(type='bool', default=True)
         )
 
@@ -106,7 +105,6 @@ class Configuration(BluecatModule):
         data['dnsOptionInheritanceEnabled'] = self.module.params.get('dnsOptionInheritanceEnabled')
         data['checkSrvCnameValidation'] = self.module.params.get('checkSrvCnameValidation')
         data['keyAutoRegenerationEnabled'] = self.module.params.get('keyAutoRegenerationEnabled')
-        data['dataCheckerEnabled'] = self.module.params.get('dataCheckerEnabled')
         data['serverMonitoringEnabled'] = self.module.params.get('serverMonitoringEnabled')
         data = json.dumps(data)
         return data
