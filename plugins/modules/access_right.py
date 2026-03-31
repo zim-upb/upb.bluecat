@@ -37,7 +37,7 @@ class AccessRight(BluecatModule):
         ]
 
         super(AccessRight, self).__init__(self.module_args,
-                                          required_if=self.required_if
+                                          required_if=self.required_if,
                                           supports_check_mode=True)
 
     def exec_module(self, **kwargs):
@@ -181,7 +181,14 @@ class AccessRight(BluecatModule):
         for key, value in data.items():
             if key == 'userScope':
                 continue
-            if value != access_right[key]:
+            if key == 'accessOverrides':
+                diff = [d for d in value if d not in access_right[key]]
+                if diff:
+                    return True
+            elif key == 'resource':
+                if value['id'] != access_right[key]['id']:
+                    return True
+            elif value != access_right[key]:
                 return True
         return False
 
