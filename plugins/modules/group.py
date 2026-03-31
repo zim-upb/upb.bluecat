@@ -48,8 +48,8 @@ class Group(BluecatModule):
 
         state = self.module.params.get('state')
         if state == 'present':
+            data = self.build_data(authenticator_id, authenticator_type)
             if group_id:
-                data = self.build_data(authenticator_id, authenticator_type)
                 if self.compare_data(group, data):
                     self.update_group(group_id, data)
             else:
