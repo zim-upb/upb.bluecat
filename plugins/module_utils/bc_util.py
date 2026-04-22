@@ -144,6 +144,18 @@ class BluecatModule():
         else:
             return zones['data'][0]
 
+    def get_signing_policy_by_name(self, name):
+        filter = 'name:eq("{}")'.format(name)
+        signing_policies = self.client.http_get('/signingPolicies',
+                                                params={'limit': 1,
+                                                        'filter': filter
+                                                        }
+                                                )
+        if signing_policies['count'] == 0:
+            return None
+        else:
+            return signing_policies['data'][0]
+
     def get_tag(self, name):
         filter = 'name:eq("{}")'.format(name)
         rr = self.client.http_get(f'/tags',
