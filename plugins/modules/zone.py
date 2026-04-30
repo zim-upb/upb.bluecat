@@ -22,7 +22,6 @@ class Zone(BluecatModule):
             move_dotted_resource_records=dict(type='bool', default=False)
         )
 
-
         super(Zone, self).__init__(self.module_args,
                                    supports_check_mode=True)
 
@@ -31,15 +30,16 @@ class Zone(BluecatModule):
         state = self.module.params.get('state')
         zone_id = zone.get('id')
         if state == 'present':
+            data = self.build_data()
             if zone:
-                if self.compare_data(zone):
-                    self.update_zone(zone_id)
+                if self.compare_data(data, zone):
+                    self.update_zone(zone_id, data)
             else:
                 if self.module.params['zone']:
                     parent_id = self.get_parent_id()
-                    self.create_sub_zone(parent_id)
+                    self.create_sub_zone(parent_id, data)
                 else:
-                    self.create_top_zone()
+                    self.create_top_zone(data)
         elif state =="absent":
             self.delete_zone(zone_id)
 
@@ -85,32 +85,29 @@ class Zone(BluecatModule):
         else:
             return block['data'][0]['id']
 
-    def create_top_zone(self):
+    def create_top_zone(self, data):
         changed = True
         result = None
         view_id = self.get_view_id()
         if not self.module.check_mode:
-            data = self.build_data()
             result = self.client.http_post(f'/views/{view_id}/zones',
                                             data=data,
                                             headers=self.headers)
         self.exit_json(changed=changed, result=str(result))
 
-    def create_sub_zone(self, parent_id):
+    def create_sub_zone(self, parent_id, data):
         changed = True
         result = None
         if not self.module.check_mode:
-            data = self.build_data()
             result = self.client.http_post(f'/zones/{parent_id}/zones',
                                             data=data,
                                             headers=self.headers)
         self.exit_json(changed=changed, result=str(result))
 
-    def update_zone(self, id):
+    def update_zone(self, id, data):
         changed = True
         result = None
         if not self.module.check_mode:
-            data = self.build_data()
             result = self.client.http_put(f'/zones/{id}',
                                           data=data,
                                           headers=self.headers)
@@ -133,12 +130,12 @@ class Zone(BluecatModule):
         data = json.dumps(data)
         return data
 
-    def compare_data(self, block):
-        data = json.loads(self.build_data())
+    def compare_data(self, data, zone):
+        data = json.loads(data)
         for key, value in data.items():
             if key == 'move_dotted_resource_records':
                 continue
-            if block[key] != value:
+            if zone[key] != value:
                 return True
         return False
 
