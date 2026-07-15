@@ -17,7 +17,7 @@ class NetworkAvailableAddressFacts(BluecatModule):
                                             is_fact=True)
 
     def exec_module(self, **kwargs):
-        results = dict(ansible_facts=dict(networks=[]))
+        results = dict(ansible_facts=dict(available_addresses=[]))
         collection_id = None
         range = self.module.params.get('range', None)
         if range:
